@@ -1,0 +1,13 @@
+library IEEE;
+use IEEE.STD_LOGIC_1164.all;
+
+
+entity datapath is
+
+end;
+
+
+architecture arch of datapath is
+begin 
+
+end;

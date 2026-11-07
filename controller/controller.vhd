@@ -1,0 +1,109 @@
+
+-- Inclusão de bibliotecas
+library IEEE;
+use IEEE.STD_LOGIC_1164.all;
+use IEEE.NUMERIC_STD.all;
+
+-- declaração da interface da entity
+entity controller is
+	PORT(
+		eq, l, p, clk, sw_z, a								: in 	STD_LOGIC;
+		m															: in std_logic_vector(2 downto 0);
+		clr_tim, clr_lev, clr_rand, led_z				: out STD_LOGIC;
+		ld_lev, ld_tim, ld_rand, d 						: out STD_LOGIC;
+		stg														: out STD_LOGIC_VECTOR(1 downto 0)
+	);
+end;
+
+
+architecture fsm of controller is
+	type state_type is (S0, S1, P1, S2, P2, S3, P3, S4);
+	signal PS : state_type := S0;
+	signal NS : state_type;
+		
+
+begin
+
+	-- processo 1
+		sync_proc: process (clk)
+			begin
+			if(rising_edge(clk)) then
+				PS <= NS;
+			end if;
+			end process sync_proc;
+			
+	-- processo 2
+		comb_proc : process (PS, l, m, eq, p, sw_z)
+			begin
+			ld_lev <= '0';
+			ld_tim <= '0';
+			ld_rand <= '0';
+			clr_lev <= '0';
+			clr_rand <= '0';
+			clr_tim <= '0';
+			stg <= "00";
+			
+			NS <= PS;
+			
+			case PS is
+				when S0 =>
+					clr_lev <= '1';
+					clr_rand <= '1';
+					clr_tim <= '1';
+					if (p = '1' and m = "001") then NS <= S1;
+					elsif (p = '1' and m = "010") then NS <= S2;
+					elsif (p = '1' and m = "100") then NS <= S3;
+					end if;
+					
+				when S1 =>
+					if(l = '0' and sw_z = '1') then NS <= P1; ld_lev <= '1'; ld_rand <= '1';
+					elsif (l = '1') then NS <= S4;
+					elsif (sw_z = '0') then NS <= S1;
+					end if;
+					
+				when S2 => 
+					if(l = '0' and sw_z = '1') then NS <= P2; ld_lev <= '1'; ld_rand <= '1';
+					elsif (l = '1') then NS <= S4;
+					elsif (sw_z = '0') then NS <= S2;
+					end if;
+					
+				when S3 =>
+					if(l = '0' and sw_z = '1') then NS <= P3; ld_lev <= '1'; ld_rand <= '1';
+					elsif (l = '1') then NS <= S4;
+					elsif (sw_z = '0') then NS <= S3;
+					end if;
+					
+				when P1 => 
+					ld_tim <= '1';
+					stg <= "01";
+					if(eq = '0') then NS <= P1;
+					else NS <= S1;
+					end if;
+					
+				when P2 => 
+					ld_tim <= '1';
+					stg <= "10";
+					if(eq = '0') then NS <= P2;
+					else NS <= S2;
+					end if;
+					
+				when P3 => 
+					ld_tim <= '1';
+					stg <= "11";
+					if(eq = '0') then NS <= P3;
+					else NS <= S3;
+					end if;
+					
+				when S4 => 
+					d <= '1';
+					if(a = '1') then NS <= S0;
+					else NS <= S4;
+					end if;
+					
+				when others =>
+					NS <= S0;
+					
+				end case;
+			
+		end process comb_proc;
+	end fsm;

@@ -1,0 +1,27 @@
+library IEEE;
+use IEEE.STD_LOGIC_1164.all;
+
+entity comparator_level is
+	port(
+	CL : in std_logic_vector(2 downto 0);
+	gt   : out std_logic;
+	eq   : out std_logic;
+	lt   : out std_logic
+	)
+end;
+
+architecture arch of comparator_level is
+constant L : std_logic_vector(2 downto 0) := "101"
+
+begin
+comp_lev : entity work.comparator
+	generic map (data_width => 3)
+	port map (
+	a => CL,
+	b => L,
+	eq => eq,
+	gt => gt, 
+	lt => lt
+	);
+
+end;
